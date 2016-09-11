@@ -1,0 +1,24 @@
+{
+  "name": "crionic",
+  "version": "1.0.0",
+  "description": "Mobile app experiments",
+  "main": "index.js",
+  "scripts": {
+    "test": "tap test/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jhs/crionic.git"
+  },
+  "keywords": [
+    "ionic",
+    "pouchdb",
+    "cloudant"
+  ],
+  "author": "Jason Smith <jason.h.smith@gmail.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/jhs/crionic/issues"
+  },
+  "homepage": "https://github.com/jhs/crionic#readme"
+}
