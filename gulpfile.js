@@ -4,6 +4,7 @@ var bower = require('bower');
 var concat = require('gulp-concat');
 var sass = require('gulp-sass');
 var minifyCss = require('gulp-minify-css');
+var child_process = require('child_process');
 var rename = require('gulp-rename');
 var sh = require('shelljs');
 
@@ -12,6 +13,9 @@ var paths = {
 };
 
 gulp.task('serve:before', ['watch']);
+gulp.task('serve', function(done) {
+  spawn('ionic', ['serve', '-c'], done)
+})
 
 gulp.task('default', ['sass']);
 
@@ -51,3 +55,32 @@ gulp.task('git-check', function(done) {
   }
   done();
 });
+
+//
+// Miscellaneous
+//
+
+function spawn(cmd, args, opts, callback) {
+  if (typeof args == 'function') {
+    callback = args
+    args = []
+    opts = {}
+  } else if (typeof opts == 'function') {
+    callback = opts
+    opts = {}
+  }
+
+  gutil.log('Spawn', gutil.colors.cyan(cmd), gutil.colors.yellow(args.map(JSON.stringify).join(', ')))
+  var child = child_process.spawn(cmd, args, opts)
+  child.on('error', er => { throw er })
+  child.stdout.pipe(process.stdout)
+  child.stderr.pipe(process.stderr)
+  process.stdin.pipe(child.stdin)
+
+  child.on('close', code => {
+    //console.log('%s %s -> %s', cmd, args.join(', '), code)
+    callback(code)
+  })
+
+  return child
+}
