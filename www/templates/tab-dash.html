@@ -20,16 +20,22 @@
         </select>
       </label>
     </div>
-    <div class="padding" ng-if="status">
+    <div class="padding-vertical">
       <h3>Status</h3>
-      <p ng-if="status == 'sync'">
-        <ion-spinner></ion-spinner>
-        Syncing
-      </p>
-      <p ng-if="status == 'ok'">
-        <i class="icon ion-checkmark balanced" style="font-size: 200%"></i>
-        Yay! Up to Date
-      </p>
+    </div>
+    <div class="list">
+      <label class="item item-icon-right">
+        Crime data sync
+        <span class="item-note" ng-if="syncStatus == 'off'">
+          Offline
+        </span>
+        <span class="item-note" ng-if="syncStatus == 'sync'">
+          <ion-spinner></ion-spinner>
+        </span>
+        <span class="item-note" ng-if="syncStatus == 'ok'">
+          <i class="icon ion-checkmark balanced"></i>
+        </span>
+      </label>
     <div>
   </ion-content>
 </ion-view>
