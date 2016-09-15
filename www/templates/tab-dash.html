@@ -7,7 +7,7 @@
       </p>
     </div>
     <div class="list">
-      <ion-toggle class="item" ng-model="settings.enableMonitoring">
+      <ion-toggle class="item" ng-change="changeMonitoring()", ng-model="settings.enableMonitoring">
         Enable location monitoring
       </ion-toggle>
 
@@ -15,18 +15,18 @@
         <div class="input-label">
           Choose a City
         </div>
-        <select>
-          <option selected>Boston</option>
+        <select ng-model="settings.city" ng-change="changeCity()">
+          <option>Boston</option>
         </select>
       </label>
     </div>
-    <div class="padding">
+    <div class="padding" ng-if="status">
       <h3>Status</h3>
-      <p>
+      <p ng-if="status == 'sync'">
         <ion-spinner></ion-spinner>
         Syncing
       </p>
-      <p>
+      <p ng-if="status == 'ok'">
         <i class="icon ion-checkmark balanced" style="font-size: 200%"></i>
         Yay! Up to Date
       </p>

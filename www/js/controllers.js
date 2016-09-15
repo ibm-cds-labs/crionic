@@ -1,6 +1,22 @@
 angular.module('starter.controllers', [])
 
-.controller('DashCtrl', function($scope) {})
+.controller('DashCtrl', function($scope, $timeout) {
+  $scope.settings = { enableMonitoring: false, city:'Boston' }
+  $scope.changeCity = function() {
+    console.log('TODO: City changed', $scope.settings)
+  }
+
+  $scope.changeMonitoring = function() {
+    console.log('Monitoring setting changed', $scope.settings.enableMonitoring)
+    $scope.status = 'sync'
+    $timeout(sync_done, 3000)
+  }
+
+  function sync_done() {
+    $scope.status = 'ok'
+    console.log('sync done $scope.city = ', $scope.city)
+  }
+})
 
 .controller('ChatsCtrl', function($scope, Chats) {
   // With the new view caching in Ionic, Controllers are only called
@@ -10,6 +26,7 @@ angular.module('starter.controllers', [])
   //
   //$scope.$on('$ionicView.enter', function(e) {
   //});
+  console.log('The scope is now', $scope.settings)
 
   $scope.chats = Chats.all();
   $scope.remove = function(chat) {
