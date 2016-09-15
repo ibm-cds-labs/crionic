@@ -1,6 +1,6 @@
 {
   "name": "crionic-tabs",
-  "app_id": "",
+  "app_id": "0cfa2ce2",
   "watchPatterns": [
     "www/**/*",
     "!www/lib/**/*"
