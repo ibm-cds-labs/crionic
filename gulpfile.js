@@ -12,12 +12,21 @@ var paths = {
   sass: ['./scss/**/*.scss']
 };
 
+gulp.task('default', ['sass']);
+
 gulp.task('serve:before', ['watch']);
 gulp.task('serve', function(done) {
   spawn('ionic', ['serve', '-c'], done)
 })
 
-gulp.task('default', ['sass']);
+
+gulp.task('build-ios', ['sass'], done => {
+  spawn('ionic', ['build', 'ios'], done)
+})
+
+gulp.task('xcode', ['build-ios'], function(done) {
+  spawn('open', ['platforms/ios/crionic-tabs.xcodeproj'], done)
+})
 
 gulp.task('sass', function(done) {
   gulp.src('./scss/ionic.app.scss')
