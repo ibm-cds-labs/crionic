@@ -1,0 +1,13 @@
+1. launch: open app
+2. get started: start screen
+  a. overview/explanation
+  b. accept background location monitoring
+  c. choose city: service request to get city user is in /city?lat=y&lon=x
+  d. set radius preference: default 1/4 mile, choices: 1/8, 1/4, 1/2 and 1 mile
+3. sync: app downloads all recent crime data by syncing with a Cloudant view
+  a. for Boston, sync with https://opendata.cloudant.com/crimes/_design/view/_view/bostonlast7days
+4.  use
+  a. poll OS for location change
+  b. query local data for crimes nearby: note: need to figure out trigonometry for radius query
+  c. compute crime rating
+  d. if rating > 5 buzz the phone
