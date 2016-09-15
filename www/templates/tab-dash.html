@@ -6,10 +6,30 @@
         This app keeps an eye on where you are and warns you if you get near high-crime areas.
       </p>
     </div>
-    <ion-list>
-      <ion-toggle ng-model="settings.enableMonitoring">
+    <div class="list">
+      <ion-toggle class="item" ng-model="settings.enableMonitoring">
         Enable location monitoring
       </ion-toggle>
-    </ion-list>
+
+      <label class="item item-input item-select">
+        <div class="input-label">
+          Choose a City
+        </div>
+        <select>
+          <option selected>Boston</option>
+        </select>
+      </label>
+    </div>
+    <div class="padding">
+      <h3>Status</h3>
+      <p>
+        <ion-spinner></ion-spinner>
+        Syncing
+      </p>
+      <p>
+        <i class="icon ion-checkmark balanced" style="font-size: 200%"></i>
+        Yay! Up to Date
+      </p>
+    <div>
   </ion-content>
 </ion-view>
