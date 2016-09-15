@@ -4,6 +4,11 @@
   "description": "Pedestrian safety app",
   "main": "index.js",
   "scripts": {
+    "dev": "gulp serve",
+    "ios": "gulp ios",
+    "xcode": "gulp xcode",
+    "xcode-watch": "gulp xcode-watch",
+    "bower": "bower update",
     "test": "tap test/"
   },
   "repository": {
