@@ -32,15 +32,16 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
     $scope.syncStatus = 'sync'
 
     var rep = result.puller
-    rep.on('filter-seen', function(ok, total, seen) {
-      console.log('Status: %s/%s IDs found; total seen: %s', ok, total, seen)
+
+    var start = new Date
+    rep.on('filter-seen', function(seen, total) {
+      var end = new Date
+      var elapsedSeconds = (end - start) / 1000
+      var docsPerSec = Math.round(seen / elapsedSeconds)
+      console.log('Status: %s/%s IDs found; %s docs/sec', seen, total, docsPerSec)
       $scope.$apply(function() {
-        $scope.syncPercent = Math.floor(ok / total)
+        $scope.syncPercent = Math.floor(100 * seen / total)
       })
-    })
-    rep.then(function(x) {
-      console.log('- - - - - - - - - - - - - - - Rep.then called', x)
-      //$scope.syncStatus = 'ok'
     })
     rep.on('complete', function(info) {
       $scope.$apply(function() {
@@ -52,8 +53,7 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
         $scope.syncStatus = 'off'
       })
     })
-  }, function(er) { console.error(er) }
-  ).catch(function(er) { console.error(er) })
+  }).catch(function(er) { console.error(er) })
 })
 
 .controller('ChatsCtrl', function($scope, $cordovaGeolocation, DB) {

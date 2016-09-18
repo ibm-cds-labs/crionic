@@ -1,7 +1,9 @@
 angular.module('starter.services', ['ionic'])
 
 .factory('DB', function($q) {
-  var crimes_origin = new PouchDB('https://opendata.cloudant.com/crimes')
+  var key_user = 'merstrockesserallicatigh'
+  var key_pass = '3991455f205673b6dcf9d01bef7ffa8647e76928'
+  var crimes_origin = new PouchDB('https://'+key_user+':'+key_pass+'@opendata.cloudant.com/crimes')
   var crimes = new PouchDB('crimes')
   var config = new PouchDB('config')
   var noop = function() {}
@@ -48,32 +50,24 @@ angular.module('starter.services', ['ionic'])
       console.log('Use %s documents to replicate from view: %s', res.rows.length, viewName)
 
       var okCount = res.rows.length
-      var okIds = {}
-      res.rows.forEach(function(row) {
-        okIds[row.id] = true
-      })
+      var okIds = res.rows.map(function(row) { return row.id })
 
-      var seen = 0, ok = 0
+      var seen = 0
       function isGoodDocId(doc) {
         seen += 1
-        if (seen % 1000 == 0 && puller)
-          puller.emit('filter-seen', ok, okCount, seen)
+        if (seen % 100 == 0 && puller)
+          puller.emit('filter-seen', seen, okCount)
 
-        var result = !! okIds[doc._id]
-        if (result) {
-          ok += 1
-          console.log('Pass doc: %s', doc._id)
-        } else {
-//          console.log('Block doc: %s', doc._id)
-        }
-
-        return result
+        return true
       }
 
-      var opts = {filter:isGoodDocId}
+      var opts = {filter:isGoodDocId, batch_size:100, doc_ids:okIds, timeout:2 * 60 * 1000}
       console.log('Begin pull %s docs from %s', okCount, crimes_origin, opts)
 
       var puller = crimes.pull(crimes_origin, opts)
+      puller.on('change', function(info) {
+        console.log('Pull change', info)
+      })
       puller.on('complete', function(info) {
         console.log('Replication complete, result:', info)
         puller = null
