@@ -3,7 +3,7 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
 .controller('DashCtrl', function($scope, $timeout, DB) {
   $scope.settings = { enableMonitoring: false, city:'Boston' }
   $scope.syncStatus = 'off'
-  $scope.seen = 0
+  $scope.syncPercent = 0
 
   // Keep the UI and config in the DB in sync.
   var config_id = 'config' // Document ID of the app configuration
@@ -28,34 +28,32 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
   }
 
   console.log('Calling up rep from the controller')
-  var rep = DB.pullCrimes()
-  rep.once('filter-seen', function() {
-    $scope.$apply(function() {
-      console.log('The filter running indicates replication in progress')
-      $scope.syncStatus = 'sync'
-    })
-  })
-  rep.on('filter-seen', function(n) {
-    $scope.$apply(function() {
-      if (n % 100 == 0) {
-        console.log('Filter has processed %s docs', n)
-        $scope.seen = n
-      }
-    })
-  })
-  rep.on('complete', function() {
-    $scope.$apply(function() {
-      $scope.syncStatus = 'ok'
-    })
-  })
-  rep.on('error', function(er) {
-    $scope.$apply(function() {
-      $scope.syncStatus = 'off'
-    })
-  })
+  DB.pullCrimes().then(function(result) {
+    $scope.syncStatus = 'sync'
 
-  console.log('Rep is', rep)
-  console.log('typeof rep.then', typeof rep.then)
+    var rep = result.puller
+    rep.on('filter-seen', function(ok, total, seen) {
+      console.log('Status: %s/%s IDs found; total seen: %s', ok, total, seen)
+      $scope.$apply(function() {
+        $scope.syncPercent = Math.floor(ok / total)
+      })
+    })
+    rep.then(function(x) {
+      console.log('- - - - - - - - - - - - - - - Rep.then called', x)
+      //$scope.syncStatus = 'ok'
+    })
+    rep.on('complete', function(info) {
+      $scope.$apply(function() {
+        $scope.syncStatus = 'ok'
+      })
+    })
+    rep.on('error', function(er) {
+      $scope.$apply(function() {
+        $scope.syncStatus = 'off'
+      })
+    })
+  }, function(er) { console.error(er) }
+  ).catch(function(er) { console.error(er) })
 })
 
 .controller('ChatsCtrl', function($scope, $cordovaGeolocation, DB) {

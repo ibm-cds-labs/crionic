@@ -1,6 +1,7 @@
 angular.module('starter.services', ['ionic'])
 
 .factory('DB', function($q) {
+  var crimes_origin = new PouchDB('https://opendata.cloudant.com/crimes')
   var crimes = new PouchDB('crimes')
   var config = new PouchDB('config')
   var noop = function() {}
@@ -9,7 +10,6 @@ angular.module('starter.services', ['ionic'])
   crimes.txn = config.txn = txn
   crimes.pull = config.pull = pull_replicate
 
-  var puller = null
   return {crimes:crimes, config:config, txn:txn, noop:noop, pullCrimes:pullCrimes}
 
   function pull_replicate(sourceUrl, opts) {
@@ -35,55 +35,56 @@ angular.module('starter.services', ['ionic'])
   }
 
   function pullCrimes() {
-    if (puller) {
-      console.log('Re-use in-flight puller')
-      return puller
-    }
+    console.log('Find doc IDs to replicate')
+    var deferred = $q.defer()
 
-    var db = 'https://opendata.cloudant.com/crimes'
-    var opts = {}
+    var viewName = 'view/bostonlast7days'
+    crimes_origin.query(viewName, {reduce:false})
+      .then(replicate_view)
+      .catch(function(er) { console.error('Replication error', er) })
+    return deferred.promise
 
-    //opts.filter = '_view'
-    //opts.view   = 'view/bostonlast7days'
+    function replicate_view(res) {
+      console.log('Use %s documents to replicate from view: %s', res.rows.length, viewName)
 
-    var i = 0, city = 'Boston'
-    opts.filter = doc_filter
+      var okCount = res.rows.length
+      var okIds = {}
+      res.rows.forEach(function(row) {
+        okIds[row.id] = true
+      })
 
-    console.log('Begin pull from %s', db, opts)
-    puller = crimes.pull(db, opts)
-    puller.on('complete', function(info) {
-      console.log('Replication complete, result:', info)
-      puller = null
-      return info
-    }).catch(function(er) {
-      console.log('Error pulling crimes DB', er)
-      puller = null
-    })
+      var seen = 0, ok = 0
+      function isGoodDocId(doc) {
+        seen += 1
+        if (seen % 1000 == 0 && puller)
+          puller.emit('filter-seen', ok, okCount, seen)
 
-    return puller
+        var result = !! okIds[doc._id]
+        if (result) {
+          ok += 1
+          console.log('Pass doc: %s', doc._id)
+        } else {
+//          console.log('Block doc: %s', doc._id)
+        }
 
-    function doc_filter(doc) {
-      i += 1
-      var result = filter_city(doc)
-      if (i % 10 == 0)
-        puller.emit('filter-seen', i)
-      return result
-    }
-
-    function filter_city(doc) {
-      var source = doc.properties && doc.properties.source
-      var coords = doc.geometry && doc.geometry.coordinates
-
-      if (source != city)
-        return false
-
-      if (! coords) {
-        console.log('%s doc with no coordinates: %s', city, doc._id)
-        return false
+        return result
       }
 
-      console.log('Import', doc)
-      return true
+      var opts = {filter:isGoodDocId}
+      console.log('Begin pull %s docs from %s', okCount, crimes_origin, opts)
+
+      var puller = crimes.pull(crimes_origin, opts)
+      puller.on('complete', function(info) {
+        console.log('Replication complete, result:', info)
+        puller = null
+      })
+      puller.on('error', function(er) {
+        console.log('Error pulling crimes DB', er)
+        puller = null
+      })
+
+      console.log('RESOLVE PULLER NOW', puller)
+      return deferred.resolve({puller:puller})
     }
   }
 
