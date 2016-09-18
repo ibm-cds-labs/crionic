@@ -29,30 +29,30 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
 
   console.log('Calling up rep from the controller')
   var rep = DB.pullCrimes()
-  rep.once('filter-seen', function() {
-    $scope.$apply(function() {
-      console.log('The filter running indicates replication in progress')
-      $scope.syncStatus = 'sync'
-    })
-  })
-  rep.on('filter-seen', function(n) {
-    $scope.$apply(function() {
-      if (n % 100 == 0) {
-        console.log('Filter has processed %s docs', n)
-        $scope.seen = n
-      }
-    })
-  })
-  rep.on('complete', function() {
-    $scope.$apply(function() {
-      $scope.syncStatus = 'ok'
-    })
-  })
-  rep.on('error', function(er) {
-    $scope.$apply(function() {
-      $scope.syncStatus = 'off'
-    })
-  })
+//  rep.once('filter-seen', function() {
+//    $scope.$apply(function() {
+//      console.log('The filter running indicates replication in progress')
+//      $scope.syncStatus = 'sync'
+//    })
+//  })
+//  rep.on('filter-seen', function(n) {
+//    $scope.$apply(function() {
+//      if (n % 100 == 0) {
+//        console.log('Filter has processed %s docs', n)
+//        $scope.seen = n
+//      }
+//    })
+//  })
+//  rep.on('complete', function() {
+//    $scope.$apply(function() {
+//      $scope.syncStatus = 'ok'
+//    })
+//  })
+//  rep.on('error', function(er) {
+//    $scope.$apply(function() {
+//      $scope.syncStatus = 'off'
+//    })
+//  })
 
   console.log('Rep is', rep)
   console.log('typeof rep.then', typeof rep.then)

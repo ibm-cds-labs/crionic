@@ -1,6 +1,7 @@
 angular.module('starter.services', ['ionic'])
 
 .factory('DB', function($q) {
+  var crimes_origin = new PouchDB('https://opendata.cloudant.com/crimes')
   var crimes = new PouchDB('crimes')
   var config = new PouchDB('config')
   var noop = function() {}
@@ -9,7 +10,6 @@ angular.module('starter.services', ['ionic'])
   crimes.txn = config.txn = txn
   crimes.pull = config.pull = pull_replicate
 
-  var puller = null
   return {crimes:crimes, config:config, txn:txn, noop:noop, pullCrimes:pullCrimes}
 
   function pull_replicate(sourceUrl, opts) {
@@ -35,50 +35,46 @@ angular.module('starter.services', ['ionic'])
   }
 
   function pullCrimes() {
-    if (puller) {
-      console.log('Re-use in-flight puller')
-      return puller
-    }
+    console.log('Find doc IDs to replicate')
+    var viewName = 'view/bostonlast7days'
+    return
+      crimes_origin.query(viewName, {reduce:false})
+      .then(function(res) {
+        console.log('Found %s documents to replicate from view: %s', res.rows.length, viewName)
+        var ids = res.rows.map(function(row) { return row.id })
+        var opts = {doc_ids:ids, filter:doc_filter}
 
-    var db = 'https://opendata.cloudant.com/crimes'
-    var opts = {}
+        console.log('Begin pull from %s', crimes_origin, opts)
+        puller = crimes.pull(crimes_origin, opts)
+        puller.on('complete', function(info) {
+          console.log('Replication complete, result:', info)
+          puller = null
+          return info
+        }).catch(function(er) {
+          console.log('Error pulling crimes DB', er)
+          puller = null
+        })
 
-    //opts.filter = '_view'
-    //opts.view   = 'view/bostonlast7days'
-
-    var i = 0, city = 'Boston'
-    opts.filter = doc_filter
-
-    console.log('Begin pull from %s', db, opts)
-    puller = crimes.pull(db, opts)
-    puller.on('complete', function(info) {
-      console.log('Replication complete, result:', info)
-      puller = null
-      return info
-    }).catch(function(er) {
-      console.log('Error pulling crimes DB', er)
-      puller = null
-    })
-
-    return puller
+        return puller
+      })
 
     function doc_filter(doc) {
       i += 1
-      var result = filter_city(doc)
       if (i % 10 == 0)
         puller.emit('filter-seen', i)
-      return result
+
+      return filter_city(doc)
     }
 
     function filter_city(doc) {
       var source = doc.properties && doc.properties.source
       var coords = doc.geometry && doc.geometry.coordinates
 
-      if (source != city)
+      if (! source)
         return false
 
       if (! coords) {
-        console.log('%s doc with no coordinates: %s', city, doc._id)
+        console.log('%s doc with no coordinates: %s', source, doc._id)
         return false
       }
 
