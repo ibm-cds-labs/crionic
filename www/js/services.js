@@ -1,50 +1,66 @@
-angular.module('starter.services', [])
+angular.module('starter.services', ['ionic'])
 
-.factory('Chats', function() {
-  // Might use a resource here that returns a JSON array
+.factory('DB', function($q) {
+  var crimes = new PouchDB('crimes')
+  var config = new PouchDB('config')
 
-  // Some fake testing data
-  var chats = [{
-    id: 0,
-    name: 'Ben Sparrow',
-    lastText: 'You on your way?',
-    face: 'img/ben.png'
-  }, {
-    id: 1,
-    name: 'Max Lynx',
-    lastText: 'Hey, it\'s me',
-    face: 'img/max.png'
-  }, {
-    id: 2,
-    name: 'Adam Bradleyson',
-    lastText: 'I should buy a boat',
-    face: 'img/adam.jpg'
-  }, {
-    id: 3,
-    name: 'Perry Governor',
-    lastText: 'Look at my mukluks!',
-    face: 'img/perry.png'
-  }, {
-    id: 4,
-    name: 'Mike Harrington',
-    lastText: 'This is wicked good ice cream.',
-    face: 'img/mike.png'
-  }];
+  // Use this quick and dirty Txn workalike.
+  crimes.txn = config.txn = txn
 
-  return {
-    all: function() {
-      return chats;
-    },
-    remove: function(chat) {
-      chats.splice(chats.indexOf(chat), 1);
-    },
-    get: function(chatId) {
-      for (var i = 0; i < chats.length; i++) {
-        if (chats[i].id === parseInt(chatId)) {
-          return chats[i];
+  return {crimes:crimes, config:config, txn:txn}
+
+  // A quick and dirty TXN clone.
+  function txn(opts, operation) {
+    var db = this
+    var deferred = $q.defer()
+
+    go(0)
+    return deferred.promise
+
+    function go(i) {
+      i += 1
+      if (i > 5)
+        return deferred.reject(new Error('Failed to update '+opts.id+' after '+i+' iterations'))
+
+      db.get(opts.id, function(er, doc) {
+        if (er && er.status == 404 && opts.create)
+          doc = {_id:opts.id}
+        else if (er)
+          return deferred.reject(er)
+
+        var before = JSON.stringify(doc)
+        var op_handled = false
+
+        try { operation(doc, op_done) }
+        catch (er) { return deferred.reject(er) }
+
+        if (! op_handled)
+          op_done() // The operation function did not call the callback
+
+        function op_done(er) {
+          op_handled = true
+
+          if (er)
+            return deferred.reject(er)
+
+          var after = JSON.stringify(doc)
+          if (before == after) {
+            console.log('Skip no-op change:', doc._id)
+            return deferred.resolve(doc)
+          }
+
+          doc.updated_at = new Date
+          doc.created_at = doc.created_at || doc.updated_at
+
+          db.put(doc, function(er, res) {
+            if (er)
+              return deferred.reject(er)
+
+            doc._rev = res.rev
+            deferred.resolve(doc)
+          })
         }
-      }
-      return null;
-    }
-  };
+      })
+    } // go
+  }
 });
