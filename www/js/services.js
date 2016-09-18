@@ -3,11 +3,12 @@ angular.module('starter.services', ['ionic'])
 .factory('DB', function($q) {
   var crimes = new PouchDB('crimes')
   var config = new PouchDB('config')
+  var noop = function() {}
 
   // Use this quick and dirty Txn workalike.
   crimes.txn = config.txn = txn
 
-  return {crimes:crimes, config:config, txn:txn}
+  return {crimes:crimes, config:config, txn:txn, noop:noop}
 
   // A quick and dirty TXN clone.
   function txn(opts, operation) {
@@ -21,6 +22,9 @@ angular.module('starter.services', ['ionic'])
       i += 1
       if (i > 5)
         return deferred.reject(new Error('Failed to update '+opts.id+' after '+i+' iterations'))
+
+      if (typeof opts == 'string')
+        opts = {id:opts}
 
       db.get(opts.id, function(er, doc) {
         if (er && er.status == 404 && opts.create)
