@@ -3,7 +3,9 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
 .controller('DashCtrl', function($scope, $timeout, DB) {
   $scope.settings = { enableMonitoring: false, city:'Boston' }
   $scope.syncStatus = 'off'
+  $scope.seen = 0
 
+  // Keep the UI and config in the DB in sync.
   var config_id = 'config' // Document ID of the app configuration
   DB.config.txn({id:config_id, create:true}, DB.noop)
   .then(function(doc) {
@@ -23,14 +25,37 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
     .then(function(doc) {
       console.log('Monitoring settings updated:', doc.enableMonitoring)
     })
-    //$scope.syncStatus = 'sync'
-    //$timeout(sync_done, 3000)
   }
 
-  function sync_done() {
-    $scope.syncStatus = 'ok'
-    console.log('sync odne DB.crimes', DB.crimes)
-  }
+  console.log('Calling up rep from the controller')
+  var rep = DB.pullCrimes()
+  rep.once('filter-seen', function() {
+    $scope.$apply(function() {
+      console.log('The filter running indicates replication in progress')
+      $scope.syncStatus = 'sync'
+    })
+  })
+  rep.on('filter-seen', function(n) {
+    $scope.$apply(function() {
+      if (n % 100 == 0) {
+        console.log('Filter has processed %s docs', n)
+        $scope.seen = n
+      }
+    })
+  })
+  rep.on('complete', function() {
+    $scope.$apply(function() {
+      $scope.syncStatus = 'ok'
+    })
+  })
+  rep.on('error', function(er) {
+    $scope.$apply(function() {
+      $scope.syncStatus = 'off'
+    })
+  })
+
+  console.log('Rep is', rep)
+  console.log('typeof rep.then', typeof rep.then)
 })
 
 .controller('ChatsCtrl', function($scope, $cordovaGeolocation, DB) {
