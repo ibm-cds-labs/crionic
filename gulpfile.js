@@ -19,6 +19,9 @@ gulp.task('serve', function(done) {
   spawn('ionic', ['serve', '-c'], done)
 })
 
+gulp.task('upload', ['sass', 'trim'], function(done) {
+  spawn('ionic', ['upload'], done)
+})
 
 gulp.task('build-ios', ['sass', 'trim'], done => {
   spawn('ionic', ['build', 'ios'], done)
