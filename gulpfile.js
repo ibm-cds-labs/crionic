@@ -28,6 +28,9 @@ gulp.task('xcode', ['build-ios'], function(done) {
   spawn('open', ['platforms/ios/crionic-tabs.xcodeproj'], done)
 })
 
+// This is not great. A better thing would be to actually move the wanted code somewhere else like www/reallib and then
+// exclude www/lib from shipping in the mobile app package; i.e. whitelist what we want, don't just blacklist stuff.
+// However, that will take more time; but www/lib is currently 14MB which is too much.
 gulp.task('trim', done => {
   var remove = ['angular*'
     , 'ionic/css', 'ionic/js/ionic-angular*', 'ionic/js/{ionic,ionic.min,ionic.bundle}.js'
