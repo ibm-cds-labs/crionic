@@ -29,7 +29,11 @@ gulp.task('xcode', ['build-ios'], function(done) {
 })
 
 gulp.task('trim', done => {
-  var remove = ['angular*', 'ionic/css', 'ionic/js/ionic-angular*', 'ionic/js/{ionic,ionic.min,ionic.bundle}.js']
+  var remove = ['angular*'
+    , 'ionic/css', 'ionic/js/ionic-angular*', 'ionic/js/{ionic,ionic.min,ionic.bundle}.js'
+    , 'pouchdb/lib'
+    , 'pouchdb/dist/pouchdb{-next,.fruitdown,.fruitdown.min,,.localstorage,.localstorage.min,.memory,.memory.min}.js'
+    ]
   rm()
   function rm() {
     var target = remove.shift()
