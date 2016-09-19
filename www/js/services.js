@@ -170,14 +170,14 @@ angular.module('starter.services', ['ionic'])
 
         function op_done(er) {
           op_handled = true
-          console.log('txn: op_done')
+          //console.log('txn: op_done')
 
           if (er)
             return deferred.reject(er)
 
           var after = JSON.stringify(doc)
           if (before == after) {
-            console.log('Skip no-op change:', doc._id)
+            //console.log('Skip no-op change:', doc._id)
             return deferred.resolve(doc)
           }
 
