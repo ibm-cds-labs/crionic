@@ -28,6 +28,20 @@ gulp.task('xcode', ['build-ios'], function(done) {
   spawn('open', ['platforms/ios/crionic-tabs.xcodeproj'], done)
 })
 
+gulp.task('trim', done => {
+  var remove = ['angular*', 'ionic/css', 'ionic/js/ionic-angular*', 'ionic/js/{ionic,ionic.min,ionic.bundle}.js']
+  rm()
+  function rm() {
+    var target = remove.shift()
+    if (! target)
+      return done()
+
+    spawn('rm', ['-rf', '-v', './www/lib/'+target], {shell:true}, code => {
+      rm()
+    })
+  }
+})
+
 gulp.task('sass', function(done) {
   gulp.src('./scss/ionic.app.scss')
     .pipe(sass())

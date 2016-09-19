@@ -9,6 +9,7 @@
     "xcode": "gulp xcode",
     "xcode-watch": "gulp xcode-watch",
     "bower": "bower update",
+    "trim": "gulp trim",
     "test": "tap test/"
   },
   "repository": {
