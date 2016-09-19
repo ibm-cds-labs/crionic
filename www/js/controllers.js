@@ -34,6 +34,12 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
 
     var rep = result.puller
 
+    rep.on('error', function(er) {
+      $scope.$apply(function() {
+        $scope.syncStatus = 'off'
+      })
+    })
+
     var start = new Date
     rep.on('filter-seen', function(seen, total) {
       var end = new Date
@@ -44,18 +50,27 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
         $scope.syncPercent = Math.floor(100 * seen / total)
       })
     })
+
     rep.on('complete', function(info) {
       $scope.$apply(function() { $scope.syncStatus = 'ok' })
 
       var last_seq = info.last_seq
-      DB.config.txn({id:CONFIG_ID, create:true}, DB.noop)
+
+      console.log('Remember last_seq to skip over these in next replication: %s', last_seq)
+      return DB.config.txn({id:CONFIG_ID, create:true}, setLastSeq).then(done)
+
+      function setLastSeq(doc) {
+        doc.last_seq = last_seq
+      }
+
+      function done(doc) {
+        console.log('Remembered last_seq: %s', doc.last_seq)
+      }
     })
-    rep.on('error', function(er) {
-      $scope.$apply(function() {
-        $scope.syncStatus = 'off'
-      })
-    })
-  }).catch(function(er) { console.error(er) })
+  }).catch(function(er) {
+    console.log('Unknown error from pullCrimes()')
+    console.error(er)
+  })
 })
 
 .controller('ChatsCtrl', function($scope, $cordovaGeolocation, DB) {

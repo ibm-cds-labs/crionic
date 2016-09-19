@@ -44,6 +44,7 @@ angular.module('starter.services', ['ionic'])
       return inFlightPull
     }
 
+    options = options || {}
     console.log('pullCrimes: %j', options)
     var deferred = $q.defer()
     inFlightPull = deferred.promise
@@ -152,6 +153,7 @@ angular.module('starter.services', ['ionic'])
 
         function op_done(er) {
           op_handled = true
+          console.log('txn: op_done')
 
           if (er)
             return deferred.reject(er)
