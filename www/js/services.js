@@ -13,8 +13,9 @@ angular.module('starter.services', ['ionic'])
   crimes.pull = config.pull = pull_replicate
 
   var inFlightPull = null
+  var CONFIG_ID = 'config'
 
-  return {crimes:crimes, config:config, txn:txn, noop:noop, pullCrimes:pullCrimes}
+  return {crimes:crimes, config:config, txn:txn, noop:noop, pullCrimes:pullCrimes, CONFIG_ID:CONFIG_ID}
 
   function pull_replicate(sourceUrl, opts) {
     opts = opts || {}
@@ -38,23 +39,32 @@ angular.module('starter.services', ['ionic'])
     return rep
   }
 
-  function pullCrimes(options) {
+  function pullCrimes() {
     if (inFlightPull) {
       console.log('pullCrimes: Return in-flight pull')
       return inFlightPull
     }
 
-    options = options || {}
-    console.log('pullCrimes: %j', options)
+    console.log('pullCrimes: begin')
     var deferred = $q.defer()
     inFlightPull = deferred.promise
 
-    findLatest()
+    getLastSeq()
+      .then(findLatest)
       .then(replicate_view)
 
     return deferred.promise
 
-    function findLatest() {
+    function getLastSeq() {
+      console.log('Find last_seq for new crimes replication')
+      return config.txn({id:CONFIG_ID}, noop)
+      .then(function(config) {
+        console.log('Config is', config)
+        return config.last_seq
+      })
+    }
+
+    function findLatest(last_seq) {
       // Figure out the timestamp of "one week ago."
       var oneWeekAgo = new Date
       oneWeekAgo.setUTCDate(oneWeekAgo.getUTCDate() - 7)
@@ -68,21 +78,24 @@ angular.module('starter.services', ['ionic'])
         , end_key  : ['Boston', {}         ]
         }
 
-      console.log('Query view %s: %j', viewName, lookup)
+      console.log('Query view %s', viewName, lookup)
       return crimes_origin.query(viewName, lookup)
+      .then(function(result) {
+        return {last_seq:last_seq, view:result}
+      })
 //      .catch(function(er) {
 //        console.error('Replication error', er)
 //        deferred.reject(er)
 //      })
     }
 
-    function replicate_view(res) {
-      console.log('Replicate docs found in view: %s', res.rows.length)
-      //for (var X of res.rows)
+    function replicate_view(db) {
+      console.log('Replicate docs found in view: %s', db.view.rows.length)
+      //for (var X of db.view.rows)
       //  console.log('Days since %s stamped at %s: %s', X.id, X.key[1], (new Date - X.key[1]) / 1000 / 60 / 60 / 24)
 
-      var okCount = res.rows.length
-      var okIds = res.rows.map(function(row) { return row.id })
+      var okCount = db.view.rows.length
+      var okIds = db.view.rows.map(function(row) { return row.id })
 
       var seen = 0
       function isGoodDocId(doc) {
@@ -100,6 +113,10 @@ angular.module('starter.services', ['ionic'])
         , doc_ids   : okIds
         , timeout   : 2 * 60 * 1000
         }
+
+      if (db.last_seq)
+        opts.since = db.last_seq
+
       console.log('Begin pull %s docs from %s', okCount, crimes_origin, opts)
 
       var puller = crimes.pull(crimes_origin, opts)
