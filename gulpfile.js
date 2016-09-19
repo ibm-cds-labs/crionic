@@ -20,11 +20,11 @@ gulp.task('serve', function(done) {
 })
 
 
-gulp.task('build-ios', ['sass'], done => {
+gulp.task('build-ios', ['sass', 'trim'], done => {
   spawn('ionic', ['build', 'ios'], done)
 })
 
-gulp.task('xcode', ['build-ios'], function(done) {
+gulp.task('xcode', ['build-ios', 'trim'], function(done) {
   spawn('open', ['platforms/ios/crionic-tabs.xcodeproj'], done)
 })
 
