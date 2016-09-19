@@ -21,9 +21,9 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
       StatusBar.styleDefault();
     }
 
-//    DB.pullCrimes().then(function(res) {
-//      console.log('Initial pull complete', res)
-//    })
+    DB.pullCrimes().then(function(res) {
+      console.log('Initial pull complete', res)
+    })
   });
 })
 

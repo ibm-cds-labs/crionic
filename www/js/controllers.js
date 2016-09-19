@@ -5,11 +5,12 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
   $scope.syncStatus = 'off'
   $scope.syncPercent = 0
 
+  var CONFIG_ID = 'config' // Document ID of the app configuration
+
   // Keep the UI and config in the DB in sync.
-  var config_id = 'config' // Document ID of the app configuration
-  DB.config.txn({id:config_id, create:true}, DB.noop)
+  DB.config.txn({id:CONFIG_ID, create:true}, DB.noop)
   .then(function(doc) {
-    console.log('Got my config', doc)
+    //console.log('Got my config', doc)
     $scope.settings.enableMonitoring = doc.enableMonitoring || $scope.settings.enableMonitoring
     $scope.settings.city             = doc.city             || $scope.settings.city
   }).catch(function(e) { throw e })
@@ -20,7 +21,7 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
 
   $scope.changeMonitoring = function() {
     console.log('Monitoring setting changed', $scope.settings.enableMonitoring)
-    DB.config.txn({id:config_id, create:true},
+    DB.config.txn({id:CONFIG_ID, create:true},
       function(doc) { doc.enableMonitoring = !! $scope.settings.enableMonitoring })
     .then(function(doc) {
       console.log('Monitoring settings updated:', doc.enableMonitoring)
@@ -44,9 +45,10 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
       })
     })
     rep.on('complete', function(info) {
-      $scope.$apply(function() {
-        $scope.syncStatus = 'ok'
-      })
+      $scope.$apply(function() { $scope.syncStatus = 'ok' })
+
+      var last_seq = info.last_seq
+      DB.config.txn({id:CONFIG_ID, create:true}, DB.noop)
     })
     rep.on('error', function(er) {
       $scope.$apply(function() {

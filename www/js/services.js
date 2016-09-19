@@ -12,6 +12,8 @@ angular.module('starter.services', ['ionic'])
   crimes.txn = config.txn = txn
   crimes.pull = config.pull = pull_replicate
 
+  var inFlightPull = null
+
   return {crimes:crimes, config:config, txn:txn, noop:noop, pullCrimes:pullCrimes}
 
   function pull_replicate(sourceUrl, opts) {
@@ -26,9 +28,9 @@ angular.module('starter.services', ['ionic'])
     rep.on('active', function() {
       console.log('Pull is active', sourceUrl)
     })
-    rep.on('change', function(info) {
-      console.log('Change in pull', sourceUrl, info)
-    })
+    //rep.on('change', function(info) {
+    //  console.log('Change in pull', sourceUrl, info)
+    //})
     rep.on('complete', function(info) {
       console.log('Pull complete', sourceUrl, info)
     })
@@ -36,18 +38,47 @@ angular.module('starter.services', ['ionic'])
     return rep
   }
 
-  function pullCrimes() {
-    console.log('Find doc IDs to replicate')
-    var deferred = $q.defer()
+  function pullCrimes(options) {
+    if (inFlightPull) {
+      console.log('pullCrimes: Return in-flight pull')
+      return inFlightPull
+    }
 
-    var viewName = 'view/bostonlast7days'
-    crimes_origin.query(viewName, {reduce:false})
+    console.log('pullCrimes: %j', options)
+    var deferred = $q.defer()
+    inFlightPull = deferred.promise
+
+    findLatest()
       .then(replicate_view)
-      .catch(function(er) { console.error('Replication error', er) })
+
     return deferred.promise
 
+    function findLatest() {
+      // Figure out the timestamp of "one week ago."
+      var oneWeekAgo = new Date
+      oneWeekAgo.setUTCDate(oneWeekAgo.getUTCDate() - 7)
+      oneWeekAgo = oneWeekAgo.valueOf()
+
+      var viewName = 'view/cityTime'
+      var lookup =
+        { reduce: false
+        , stale: 'ok'
+        , start_key: ['Boston', oneWeekAgo ]
+        , end_key  : ['Boston', {}         ]
+        }
+
+      console.log('Query view %s: %j', viewName, lookup)
+      return crimes_origin.query(viewName, lookup)
+//      .catch(function(er) {
+//        console.error('Replication error', er)
+//        deferred.reject(er)
+//      })
+    }
+
     function replicate_view(res) {
-      console.log('Use %s documents to replicate from view: %s', res.rows.length, viewName)
+      console.log('Replicate docs found in view: %s', res.rows.length)
+      //for (var X of res.rows)
+      //  console.log('Days since %s stamped at %s: %s', X.id, X.key[1], (new Date - X.key[1]) / 1000 / 60 / 60 / 24)
 
       var okCount = res.rows.length
       var okIds = res.rows.map(function(row) { return row.id })
@@ -55,30 +86,36 @@ angular.module('starter.services', ['ionic'])
       var seen = 0
       function isGoodDocId(doc) {
         seen += 1
-        if (seen % 100 == 0 && puller)
+        if (seen % 10 == 0 && puller)
           puller.emit('filter-seen', seen, okCount)
 
         return true
       }
 
-      var opts = {filter:isGoodDocId, batch_size:100, doc_ids:okIds, timeout:2 * 60 * 1000}
+      var opts =
+        { filter    : isGoodDocId
+        , query_params: { bustTheCache: Math.random() }
+        , batch_size: 50
+        , doc_ids   : okIds
+        , timeout   : 2 * 60 * 1000
+        }
       console.log('Begin pull %s docs from %s', okCount, crimes_origin, opts)
 
       var puller = crimes.pull(crimes_origin, opts)
-      puller.on('change', function(info) {
-        console.log('Pull change', info)
-      })
-      puller.on('complete', function(info) {
-        console.log('Replication complete, result:', info)
-        puller = null
-      })
-      puller.on('error', function(er) {
-        console.log('Error pulling crimes DB', er)
-        puller = null
-      })
-
-      console.log('RESOLVE PULLER NOW', puller)
+      puller.on('complete', pullComplete)
+      puller.on('error', pullError)
       return deferred.resolve({puller:puller})
+
+      function pullComplete(info) {
+        console.log('Clear in-flight pull after successful replication', info)
+        inFlightPull = null
+      }
+
+      function pullError(er) {
+        console.log('Clear in-flight pull after replication error', er)
+        inFlightPull = null
+      }
+
     }
   }
 
