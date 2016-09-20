@@ -5,17 +5,16 @@ angular.module('starter.services', ['ionic'])
   var key_pass = '3991455f205673b6dcf9d01bef7ffa8647e76928'
   var crimes_origin = new PouchDB('https://'+key_user+':'+key_pass+'@opendata.cloudant.com/crimes')
   var crimes = new PouchDB('crimes')
-  var config = new PouchDB('config')
   var noop = function() {}
 
   // Use this quick and dirty Txn workalike.
-  crimes.txn = config.txn = txn
-  crimes.pull = config.pull = pull_replicate
+  crimes.txn = txn
+  crimes.pull = pull_replicate
 
   var inFlightPull = null
   var CONFIG_ID = 'config'
 
-  return {crimes:crimes, config:config, txn:txn, noop:noop, pullCrimes:pullCrimes, CONFIG_ID:CONFIG_ID}
+  return {crimes:crimes, txn:txn, noop:noop, pullCrimes:pullCrimes, CONFIG_ID:CONFIG_ID}
 
   function pull_replicate(sourceUrl, opts) {
     opts = opts || {}
@@ -57,7 +56,7 @@ angular.module('starter.services', ['ionic'])
 
     function getLastSeq() {
       console.log('Find last_seq for new crimes replication')
-      return config.txn({id:CONFIG_ID}, noop)
+      return crimes.txn({id:CONFIG_ID, create:true}, noop)
       .then(function(config) {
         console.log('Config is', config)
         return config.last_seq

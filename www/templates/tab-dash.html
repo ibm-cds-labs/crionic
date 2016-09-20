@@ -31,7 +31,7 @@
         </span>
         <div class="item-note" ng-if="syncStatus == 'sync'">
           <ion-spinner></ion-spinner>
-          <progress style="display:inline;" max="100" value="{{syncPercent}}">Inside</progress>
+          <progress style="display:inline;" ng-if="syncPercent > 0" max="100" value="{{syncPercent}}">Inside</progress>
         </div>
         <span class="item-note" ng-if="syncStatus == 'ok'">
           <i class="icon ion-checkmark balanced"></i>

@@ -5,10 +5,8 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
   $scope.syncStatus = 'off'
   $scope.syncPercent = 0
 
-  var CONFIG_ID = 'config' // Document ID of the app configuration
-
   // Keep the UI and config in the DB in sync.
-  DB.config.txn({id:CONFIG_ID, create:true}, DB.noop)
+  DB.crimes.txn({id:DB.CONFIG_ID, create:true}, DB.noop)
   .then(function(doc) {
     //console.log('Got my config', doc)
     $scope.settings.enableMonitoring = doc.enableMonitoring || $scope.settings.enableMonitoring
@@ -21,7 +19,7 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
 
   $scope.changeMonitoring = function() {
     console.log('Monitoring setting changed', $scope.settings.enableMonitoring)
-    DB.config.txn({id:CONFIG_ID, create:true},
+    DB.crimes.txn({id:DB.CONFIG_ID, create:true},
       function(doc) { doc.enableMonitoring = !! $scope.settings.enableMonitoring })
     .then(function(doc) {
       console.log('Monitoring settings updated:', doc.enableMonitoring)
@@ -57,7 +55,7 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
       var last_seq = info.last_seq
 
       console.log('Remember last_seq to skip over these in next replication: %s', last_seq)
-      return DB.config.txn({id:CONFIG_ID, create:true}, setLastSeq).then(done)
+      return DB.crimes.txn({id:DB.CONFIG_ID, create:true}, setLastSeq).then(done)
 
       function setLastSeq(doc) {
         doc.last_seq = last_seq
