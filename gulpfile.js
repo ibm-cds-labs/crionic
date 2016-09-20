@@ -108,7 +108,7 @@ function spawn(cmd, args, opts, callback) {
   child.on('error', er => { throw er })
   child.stdout.pipe(process.stdout)
   child.stderr.pipe(process.stderr)
-  process.stdin.pipe(child.stdin)
+  //process.stdin.pipe(child.stdin)
 
   child.on('close', code => {
     //console.log('%s %s -> %s', cmd, args.join(', '), code)
