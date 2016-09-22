@@ -13,13 +13,16 @@
         <p>
           This app keeps an eye on where you are and warns you if you get near high-crime areas.
         </p>
+        <p ng-if="lastCheck">
+          Last check: <strong>{{lastCheck}}</strong>
+        </p>
       </div>
       <div class="list">
-        <div class="item" ng-if="logs.length == 0">
+        <div class="item" ng-if="warnings.length == 0">
           Good! No activity so far.
         </div>
-        <div class="item" ng-if="logs.length > 0" ng-repeat="log in logs">
-          Log message!
+        <div class="item" ng-repeat="warning in warnings">
+          Check at {{warning.age}}
         </div>
       </div>
     </div>

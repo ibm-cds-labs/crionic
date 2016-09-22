@@ -96,10 +96,9 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
   })
 })
 
-//.controller('ChatsCtrl', function($scope, $cordovaGeolocation, DB) {
-.controller('ChatsCtrl', function($scope, DB, Location) {
+.controller('ChatsCtrl', function($scope, $q, DB, Location) {
   $scope.enabled = false
-  $scope.logs = []
+  $scope.warnings = []
 
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
@@ -122,8 +121,24 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
 
 
   function checkMyLocation() {
-    console.log('Check locatiton for activity page')
-    //$cordovaGeolocation.getCurrentPosition().then(checkNearMe)
+    console.log('Check location for activity page')
+    return Location.geo().then(function(geo) {
+      var def = $q.defer()
+      geo.getLocations(onOk, onErr)
+      return def.promise
+
+      function onErr(er) {
+        console.log('ERROR getting locations', er)
+        def.reject()
+      }
+
+      function onOk(locations) {
+        console.log('Got %s locations', locations.length)
+        var mostRecent = locations[locations.length - 1]
+        $scope.lastCheck = moment(mostRecent.time).fromNow()
+        $scope.warnings = [ mostRecent ]
+      }
+    })
   }
 
   function checkNearMe(position) {
