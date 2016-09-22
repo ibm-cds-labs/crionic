@@ -1,6 +1,6 @@
 angular.module('starter.services', ['ionic'])
 
-.factory('Location', function($q, DB, Util) {
+.factory('Location', function($q, $cordovaLocalNotification, DB, Util) {
   var geo = null
   var getter = null
 
@@ -24,6 +24,14 @@ angular.module('starter.services', ['ionic'])
 
   function init() {
     console.log('Initialize Location')
+        $cordovaLocalNotification.schedule({
+          id: 1,
+          title: 'Title here',
+          text: 'Text here',
+          data: { customProperty: 'custom value' }
+        }).then(function (result) {
+          console.log('Result from schedule', JSON.stringify(result))
+        })
     try {
     return getGeo()
       .then(configure)
@@ -138,10 +146,38 @@ angular.module('starter.services', ['ionic'])
       if (loc.crimeCount > 5) {
         console.log('XXX')
         console.log('XXX High crime here! ', loc.crimeCount)
+        console.log('$cordovaLocalNotification: ', $cordovaLocalNotification.schedule)
         console.log('XXX')
+
+        $cordovaLocalNotification.schedule({
+          id: 1,
+          title: 'Title here',
+          text: 'Text here',
+          data: { customProperty: 'custom value' }
+        }).then(function (result) {
+          console.log('Result from schedule', JSON.stringify(result))
+          geo.finish()
+        });
+
+//        var action = 
+//           { identifier: 'MORE_SIGNIN_OPTIONS',
+//             title: 'More Options',
+//             icon: 'res://ic_moreoptions',
+//             activationMode: 'foreground',
+//             destructive: false,
+//             authenticationRequired: false
+//            }
+//
+//        $cordovaLocalNotification.schedule(
+//          { id: 1
+//          , category: 'SIGN_IN_TO_CLASS'
+//          , title: 'High Crime Area'
+//          , text: 'This area has had '+loc.crimeCount+' crimes nearby'
+//          //, actions: [action]
+//          //at: monday_9_am,
+//          })
       }
 
-      geo.finish()
     })
   }
 
