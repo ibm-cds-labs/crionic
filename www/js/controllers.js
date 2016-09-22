@@ -136,7 +136,13 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
         console.log('Got %s locations', locations.length)
         var mostRecent = locations[locations.length - 1]
         $scope.lastCheck = moment(mostRecent.time).fromNow()
-        $scope.warnings = [ mostRecent ]
+
+        // Filter locations with crime to show.
+        Location.crimeCounts(locations)
+        .then(function(locations) {
+          $scope.warnings = locations
+          def.resolve(locations)
+        })
       }
     })
   }
