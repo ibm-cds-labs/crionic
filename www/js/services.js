@@ -149,6 +149,7 @@ angular.module('starter.services', ['ionic'])
     return def.promise
 
     function gotConfig(config) {
+      console.log('Crime counts for config:', JSON.stringify(config))
       // Dupe the objects and filter out ones that are very close together in time.
       var locs = JSON.parse(JSON.stringify(locations))
       locs = locations.sort(function(A, B) { return B.time - A.time }) // Sort newest to oldest.
@@ -169,17 +170,45 @@ angular.module('starter.services', ['ionic'])
       }
 
       var result = []
-
       go()
       function go() {
         var loc = locations.shift()
         if (! loc)
           return def.resolve(result)
 
-        DB.nearby(loc.latitude, loc.longitude)
+        var lat1 = loc.latitude
+        var lon1 = loc.longitude
+
+        if (config.debug == 'Boston no crime') {
+          lat1 = 42.336453
+          lon1 = -71.049259
+        } else if (config.debug == 'Boston high crime') {
+          //lat2 = loc.latitude
+          //lat2 = loc.longitude
+        }
+
+        DB.nearby(lat1, lon1)
         .catch(function(er) { def.reject(er) })
         .then(function(docs) {
-          console.log('Nearby for location: ' + JSON.stringify(docs))
+          var distances = {'1/8 Mile':1/8, '1/4 Mile':1/4, '1/2 Mile':1/2, '1 Mile':1}
+          var maxDistance = distances[config.radius]
+          console.log('Trim out %s crime docs with distance greater than %s miles', docs.length, maxDistance)
+
+          var count = 0
+          for (var i = 0; i < docs.length; i++) {
+            var doc = docs[i]
+            var lat2 = doc.geometry.coordinates[1]
+            var lon2 = doc.geometry.coordinates[0]
+
+            var distance = Util.distance(lat1, lon1, lat2, lon2)
+            if (distance <= maxDistance) {
+              result.push(doc)
+            } else {
+              //console.log('Trim crime doc at distance %s: %s', distance, doc._id)
+            }
+          }
+
+          //console.log('Nearby for location: ' + JSON.stringify(docs))
           go()
         })
       }
@@ -209,6 +238,7 @@ angular.module('starter.services', ['ionic'])
     console.log('Find nearby crimes')
     return makeDDoc().then(function() {
       range = range || 0.1
+      range = 1000
       var lat = {startkey:latitude - range, endkey:latitude + range}
       var lon = {startkey:longitude- range, endkey:longitude+ range}
 
@@ -222,7 +252,7 @@ angular.module('starter.services', ['ionic'])
         // Find docs that ended up in both views.
         var latIds = {}
         rows.lat.forEach(function(row) {
-          console.log('Doc within latitude range: %s', row.id)
+          //console.log('Doc within latitude range: %s', row.id)
           latIds[row.id] = true
         })
 
@@ -230,12 +260,12 @@ angular.module('starter.services', ['ionic'])
         rows.lon.forEach(function(row) {
           var doc = row.value
           if (latIds[doc._id]) {
-            console.log('Found neary doc: %s', doc._id)
+            //console.log('Found nearby doc: %s', doc._id)
             docs.push(doc)
           }
         })
 
-        console.log('Yay everything is done. Results', docs)
+        console.log('Docs nearby (%s,%s): %s', latitude, longitude, docs.length)
         return docs
       })
     })

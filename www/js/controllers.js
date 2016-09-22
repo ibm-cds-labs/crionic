@@ -139,6 +139,7 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
         // Filter locations with crime to show.
         Location.crimeCounts(locations)
         .then(function(locations) {
+          console.log('Crime counts finished', JSON.stringify(locations))
           $scope.warnings = locations
           def.resolve(locations)
         })
