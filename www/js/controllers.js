@@ -51,7 +51,6 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
   }
 
   console.log('Calling up rep from the controller')
-  if(0) // XXX
   DB.pullCrimes().then(function(result) {
     $scope.syncStatus = 'sync'
 
