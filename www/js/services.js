@@ -1,5 +1,130 @@
 angular.module('starter.services', ['ionic'])
 
+.factory('Location', function($q) {
+  function noop() {}
+  var faux = {configure:noop, start:noop, stop:noop, watchLocationMode:noop, isLocationEnabled:noop}
+
+  var getter = null
+  function getGeo() {
+    if (getter)
+      return getter
+
+    getter = $q.defer()
+    console.log('Add listener for ready')
+    document.addEventListener('deviceready', ready, false)
+    return getter.promise
+
+    function ready() {
+      console.log('Device ready, geo can run now')
+      getter.resolve(window.backgroundGeoLocation)
+    }
+  }
+
+  function init() {
+    console.log('Initialize Location')
+    return getGeo()
+      .then(configure)
+      .then(watch)
+      .then(check)
+  }
+
+  function configure(geo) {
+    console.log('Configure geo settings')
+    // BackgroundGeolocation is highly configurable. See platform specific configuration options
+    geo.configure(onLocation, onFail, {
+        desiredAccuracy: 10,
+        stationaryRadius: 20,
+        distanceFilter: 30,
+        maxLocations: 100,
+        interval: 5 * 60 * 1000
+    })
+
+    return geo
+  }
+
+  function watch(geo) {
+    console.log('|||||||||||||||||||||||| watchLocationMode()')
+    var def = $q.deferred
+    geo.watchLocationMode(onOk, onError)
+    return def.promise
+
+    function onOk(enabled) {
+      console.log('||||||||||||||||||||||||')
+      console.log('watchLocationMode returned', enabled)
+      if (enabled) {
+        console.log('Location serices are enabled')
+        // call backgroundGeolocation.start
+        // only if user already has expressed intent to start service
+      } else {
+        // location service are now disabled or we don't have permission
+        // time to change UI to reflect that
+      }
+
+      def.resolve(geo)
+    }
+
+    function onError(error) {
+      console.log('Error watching location mode. Error:' + error);
+      def.reject(error)
+    }
+  }
+
+  function check(geo) {
+    console.log('||||||||||||||||||||| check')
+    geo.isLocationEnabled(onOk, onErr)
+
+    function onOk(enabled) {
+      console.log('isLocationEnabled returned', enabled)
+      if (enabled) {
+        geo.start(onStarted, onStartErr)
+      } else {
+        console.log('Location services disabled')
+        // Location services are disabled
+        if (window.confirm('Location is disabled. Would you like to open location settings?')) {
+          backgroundGeolocation.showLocationSettings();
+        }
+      }
+    }
+
+    function onErr(er) {
+      console.log('Check error', er)
+    }
+  }
+
+  function onStarted() {
+    console.log('Service started successfully')
+    // you should adjust your app UI for example change switch element to indicate
+    // that service is running
+  }
+
+  function onStartErr(error) {
+    console.log('Start error', error)
+    // Tracking has not started because of error
+    // you should adjust your app UI for example change switch element to indicate
+    // that service is not running
+    if (error.code === 2) {
+      if (window.confirm('Not authorized for location updates. Would you like to open app settings?')) {
+        backgroundGeolocation.showAppSettings();
+      }
+    } else {
+      window.alert('Start failed: ' + error.message);  
+    }
+  }
+
+  function onLocation(loc) {
+    console.log('LLLLLLLLLLLLLLLLLLLLLL')
+    console.log('Yay! Location =', loc)
+    geo.finish()
+  }
+
+  function onFail(er) {
+    console.log('EEEEEEEEEEEEEEEEEEEEEE')
+    console.log('backgroundGeolocation error:', er)
+  }
+
+  return {geo:getGeo}
+})
+
 .factory('DB', function($q) {
   var key_user = 'merstrockesserallicatigh'
   var key_pass = '3991455f205673b6dcf9d01bef7ffa8647e76928'
@@ -129,7 +254,7 @@ angular.module('starter.services', ['ionic'])
       var viewName = 'view/cityTime'
       var lookup =
         { reduce: false
-        , stale: 'ok'
+        //, stale: 'ok'
         , start_key: ['Boston', oneWeekAgo ]
         , end_key  : ['Boston', {}         ]
         }
@@ -139,10 +264,6 @@ angular.module('starter.services', ['ionic'])
       .then(function(result) {
         return {last_seq:last_seq, view:result}
       })
-//      .catch(function(er) {
-//        console.error('Replication error', er)
-//        deferred.reject(er)
-//      })
     }
 
     function replicate_view(db) {
@@ -165,9 +286,9 @@ angular.module('starter.services', ['ionic'])
       var opts =
         { filter    : isGoodDocId
         , query_params: { bustTheCache: Math.random() }
-        , batch_size: 50
+        , batch_size: 10
         , doc_ids   : okIds
-        , timeout   : 2 * 60 * 1000
+        , timeout   : 5 * 60 * 1000
         }
 
       if (db.last_seq)
