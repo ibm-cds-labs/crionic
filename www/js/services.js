@@ -1,6 +1,6 @@
 angular.module('starter.services', ['ionic'])
 
-.factory('Location', function($q) {
+.factory('Location', function($q, DB, Util) {
   var geo = null
   var getter = null
 
@@ -140,7 +140,53 @@ angular.module('starter.services', ['ionic'])
     console.log('backgroundGeolocation error:', er)
   }
 
-  return {geo:getGeo, init:init}
+  // Return locations with their crime counts.
+  function crimeCounts(locations) {
+    var def = $q.defer()
+    DB.crimes.get('config')
+      .then(gotConfig)
+      .catch(function(er) { def.reject(er) })
+    return def.promise
+
+    function gotConfig(config) {
+      // Dupe the objects and filter out ones that are very close together in time.
+      var locs = JSON.parse(JSON.stringify(locations))
+      locs = locations.sort(function(A, B) { return B.time - A.time }) // Sort newest to oldest.
+
+      locations = []
+      for (var i = 0; i < locs.length; i++) {
+        var loc = locs[i]
+        if (i == 0)
+          locations.push(loc)
+        else {
+          var duration = locations[locations.length - 1].time - loc.time
+          duration = duration / 1000 / 60 // Convert ms -> minutes
+
+          //console.log('Time diff: ', duration)
+          if (duration >= 5)
+            locations.push(loc)
+        }
+      }
+
+      var result = []
+
+      go()
+      function go() {
+        var loc = locations.shift()
+        if (! loc)
+          return def.resolve(result)
+
+        DB.nearby(loc.latitude, loc.longitude)
+        .catch(function(er) { def.reject(er) })
+        .then(function(docs) {
+          console.log('Nearby for location: ' + JSON.stringify(docs))
+          go()
+        })
+      }
+    }
+  }
+
+  return {geo:getGeo, init:init, crimeCounts:crimeCounts}
 })
 
 .factory('DB', function($q) {
@@ -390,4 +436,30 @@ angular.module('starter.services', ['ionic'])
       })
     } // go
   }
-});
+})
+
+.factory('Util', function() {
+  return {distance:getDistanceFromLatLonInMi}
+
+  function getDistanceFromLatLonInMi(lat1, lon1, lat2, lon2) {
+    return getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) * 0.621371
+  }
+
+  function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
+    var R = 6371; // Radius of the earth in km
+    var dLat = deg2rad(lat2-lat1);  // deg2rad below
+    var dLon = deg2rad(lon2-lon1); 
+    var a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2)
+      ; 
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    var d = R * c; // Distance in km
+    return d;
+  }
+
+  function deg2rad(deg) {
+    return deg * (Math.PI/180)
+  }
+})
