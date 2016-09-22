@@ -1,49 +1,66 @@
 angular.module('starter.services', ['ionic'])
 
 .factory('Location', function($q) {
-  function noop() {}
-  var faux = {configure:noop, start:noop, stop:noop, watchLocationMode:noop, isLocationEnabled:noop}
-
+  var geo = null
   var getter = null
+
   function getGeo() {
     if (getter)
       return getter
 
-    getter = $q.defer()
+    var def = $q.defer()
     console.log('Add listener for ready')
     document.addEventListener('deviceready', ready, false)
-    return getter.promise
+
+    getter = def.promise
+    return getter
 
     function ready() {
-      console.log('Device ready, geo can run now')
-      getter.resolve(window.backgroundGeoLocation)
+      geo = window.backgroundGeoLocation
+      console.log('Device ready, geo can run now', geo)
+      def.resolve(geo)
     }
   }
 
   function init() {
     console.log('Initialize Location')
+    try {
     return getGeo()
       .then(configure)
-      .then(watch)
-      .then(check)
+      .then(function(geo) {
+        // Run these simultaneously.
+        //watch(geo)
+        return check(geo)
+      })
+    } catch (er) {
+      console.log('ERROR', er)
+    }
   }
 
+  var isConfigured = false
   function configure(geo) {
+    if (isConfigured) {
+      console.log('Geo already configured')
+      return geo
+    }
+
     console.log('Configure geo settings')
     // BackgroundGeolocation is highly configurable. See platform specific configuration options
     geo.configure(onLocation, onFail, {
         desiredAccuracy: 10,
         stationaryRadius: 20,
         distanceFilter: 30,
-        maxLocations: 100,
+        maxLocations: 5,
         interval: 5 * 60 * 1000
+        //interval: 5 * 1000
     })
 
+    isConfigured = true
     return geo
   }
 
   function watch(geo) {
-    console.log('|||||||||||||||||||||||| watchLocationMode()')
+    console.log('watchLocationMode()')
     var def = $q.deferred
     geo.watchLocationMode(onOk, onError)
     return def.promise
@@ -72,6 +89,7 @@ angular.module('starter.services', ['ionic'])
   function check(geo) {
     console.log('||||||||||||||||||||| check')
     geo.isLocationEnabled(onOk, onErr)
+    return geo
 
     function onOk(enabled) {
       console.log('isLocationEnabled returned', enabled)
@@ -80,7 +98,7 @@ angular.module('starter.services', ['ionic'])
       } else {
         console.log('Location services disabled')
         // Location services are disabled
-        if (window.confirm('Location is disabled. Would you like to open location settings?')) {
+        if (window.confirm('Location is disabled. Would you like to open location settings?', 'hi')) {
           backgroundGeolocation.showLocationSettings();
         }
       }
@@ -112,17 +130,15 @@ angular.module('starter.services', ['ionic'])
   }
 
   function onLocation(loc) {
-    console.log('LLLLLLLLLLLLLLLLLLLLLL')
-    console.log('Yay! Location =', loc)
+    console.log('Yay! Location =', JSON.stringify(loc))
     geo.finish()
   }
 
   function onFail(er) {
-    console.log('EEEEEEEEEEEEEEEEEEEEEE')
     console.log('backgroundGeolocation error:', er)
   }
 
-  return {geo:getGeo}
+  return {geo:getGeo, init:init}
 })
 
 .factory('DB', function($q) {
