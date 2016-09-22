@@ -131,8 +131,8 @@ angular.module('starter.services', ['ionic'])
   }
 
   function onLocation(loc) {
-    geo.finish()
     console.log('Yay! Location =', JSON.stringify(loc))
+    geo.finish()
   }
 
   function onFail(er) {
