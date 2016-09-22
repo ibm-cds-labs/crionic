@@ -50,8 +50,9 @@ angular.module('starter.services', ['ionic'])
         desiredAccuracy: 10,
         stationaryRadius: 20,
         distanceFilter: 30,
-        maxLocations: 5,
-        interval: 5 * 60 * 1000
+        maxLocations: 1000,
+        //interval: 5 * 60 * 1000
+        interval: 1 * 60 * 1000
         //interval: 5 * 1000
     })
 
@@ -61,7 +62,7 @@ angular.module('starter.services', ['ionic'])
 
   function watch(geo) {
     console.log('watchLocationMode()')
-    var def = $q.deferred
+    var def = $q.defer()
     geo.watchLocationMode(onOk, onError)
     return def.promise
 
@@ -130,11 +131,12 @@ angular.module('starter.services', ['ionic'])
   }
 
   function onLocation(loc) {
-    console.log('Yay! Location =', JSON.stringify(loc))
     geo.finish()
+    console.log('Yay! Location =', JSON.stringify(loc))
   }
 
   function onFail(er) {
+    geo.finish()
     console.log('backgroundGeolocation error:', er)
   }
 
