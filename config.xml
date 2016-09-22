@@ -57,4 +57,7 @@
         <splash height="480" src="resources/ios/splash/Default~iphone.png" width="320" />
     </platform>
     <plugin name="cordova-plugin-geolocation" spec="~2.3.0" />
+    <plugin name="cordova-plugin-mauron85-background-geolocation" spec="~2.2.1">
+        <variable name="ALWAYS_USAGE_DESCRIPTION" value="This app requires background location tracking" />
+    </plugin>
 </widget>
