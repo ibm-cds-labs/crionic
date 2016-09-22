@@ -79,11 +79,26 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
   //
   $scope.$on('$ionicView.enter', function(e) {
     console.log('Enter view', e)
-    console.log('DB.crimes', DB.crimes)
+    //return DB.ddoc().then(checkMyLocation)
   });
 
-  window.g = $cordovaGeolocation
-  console.log('check "g"')
+  checkMyLocation()
+
+  function checkMyLocation() {
+    $cordovaGeolocation.getCurrentPosition().then(checkNearMe)
+  }
+
+  function checkNearMe(position) {
+    var lat = position.coords.latitude
+    var lon = position.coords.longitude
+
+    var range = 200
+    return DB.nearby(lat, lon, range).then(logNearby)
+  }
+
+  function logNearby(crimes) {
+    console.log('Nearby crimes', crimes)
+  }
 })
 
 .controller('ChatDetailCtrl', function($scope, $stateParams, Chats) {

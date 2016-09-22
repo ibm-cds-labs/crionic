@@ -14,7 +14,64 @@ angular.module('starter.services', ['ionic'])
   var inFlightPull = null
   var CONFIG_ID = 'config'
 
-  return {crimes:crimes, txn:txn, noop:noop, pullCrimes:pullCrimes, CONFIG_ID:CONFIG_ID}
+  return {crimes:crimes, txn:txn, noop:noop, pullCrimes:pullCrimes, CONFIG_ID:CONFIG_ID, nearby:findNearby}
+
+  function findNearby(latitude, longitude, range) {
+    console.log('Find nearby crimes')
+    return makeDDoc().then(function() {
+      range = range || 0.1
+      var lat = {startkey:latitude - range, endkey:latitude + range}
+      var lon = {startkey:longitude- range, endkey:longitude+ range}
+
+      var rows = {}
+      lat = crimes.query('crimes/latitude', lat).then(function(res) { rows.lat = res.rows })
+      lon = crimes.query('crimes/longitude', lon).then(function(res) { rows.lon = res.rows })
+
+      return $q.all([lat, lon]).then(function() {
+        console.log('Compare %s latitude and %s longitude matches', rows.lat.length, rows.lon.length)
+
+        // Find docs that ended up in both views.
+        var latIds = {}
+        rows.lat.forEach(function(row) {
+          console.log('Doc within latitude range: %s', row.id)
+          latIds[row.id] = true
+        })
+
+        var docs = []
+        rows.lon.forEach(function(row) {
+          var doc = row.value
+          if (latIds[doc._id]) {
+            console.log('Found neary doc: %s', doc._id)
+            docs.push(doc)
+          }
+        })
+
+        console.log('Yay everything is done. Results', docs)
+        return docs
+      })
+    })
+  }
+
+  function makeDDoc() {
+    return crimes.txn({id:'_design/crimes', create:true}, mk_ddoc)
+
+    function mk_ddoc(ddoc) {
+      ddoc.views = {
+        latitude: {
+          map: function(doc) {
+            if (doc.geometry && doc.geometry.coordinates)
+              emit(doc.geometry.coordinates[1], doc)
+          }.toString()
+        },
+        longitude: {
+          map: function(doc) {
+            if (doc.geometry && doc.geometry.coordinates)
+              emit(doc.geometry.coordinates[0], doc)
+          }.toString()
+        }
+      }
+    }
+  }
 
   function pull_replicate(sourceUrl, opts) {
     opts = opts || {}
