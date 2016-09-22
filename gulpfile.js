@@ -14,7 +14,7 @@ var paths = {
 
 gulp.task('default', ['sass']);
 
-gulp.task('serve:before', ['watch']);
+gulp.task('serve:before', ['watch', 'trim']);
 gulp.task('serve', function(done) {
   spawn('ionic', ['serve', '-c'], done)
 })
@@ -37,6 +37,7 @@ gulp.task('xcode', ['build-ios', 'trim'], function(done) {
 gulp.task('trim', done => {
   var remove = ['angular*'
     , 'ionic/css', 'ionic/js/ionic-angular*', 'ionic/js/{ionic,ionic.min,ionic.bundle}.js'
+    , 'moment/min/*locales*', 'moment/min/tests.js'
     , 'pouchdb/lib'
     , 'pouchdb/dist/pouchdb{-next,.fruitdown,.fruitdown.min,,.localstorage,.localstorage.min,.memory,.memory.min}.js'
     ]
