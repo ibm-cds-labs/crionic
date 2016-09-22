@@ -1,7 +1,7 @@
 angular.module('starter.controllers', ['ionic', 'ngCordova'])
 
 .controller('DashCtrl', function($scope, $timeout, DB) {
-  $scope.settings = { enableMonitoring: false, city:'Boston', radius:'1/4 Mile' }
+  $scope.settings = { enableMonitoring: false, city:'Boston', radius:'1/4 Mile', debug:'Normal Location' }
   $scope.syncStatus = 'off'
   $scope.syncPercent = 0
 
@@ -11,6 +11,7 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
     //console.log('Got my config', doc)
     $scope.settings.enableMonitoring = doc.enableMonitoring || $scope.settings.enableMonitoring
     $scope.settings.radius           = doc.radius           || $scope.settings.radius
+    $scope.settings.debug            = doc.debug            || $scope.settings.debug
     $scope.settings.city             = doc.city             || $scope.settings.city
   })
 
@@ -22,6 +23,7 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
       doc.enableMonitoring = !! $scope.settings.enableMonitoring
       doc.radius           = $scope.settings.radius
       doc.city             = $scope.settings.city
+      doc.debug            = $scope.settings.debug
     }
 
     function done(doc) {

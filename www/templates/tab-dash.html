@@ -30,6 +30,16 @@
           <option>Boston</option>
         </select>
       </label>
+      <label class="item item-input item-select item-calm">
+        <div class="input-label">
+          Development
+        </div>
+        <select ng-model="settings.debug" ng-change="changeSettings()">
+          <option>Normal Location</option>
+          <option>Boston no crime</option>
+          <option>Boston high crime</option>
+        </select>
+      </label>
     </div>
     <div class="padding-vertical">
       <h3>Status</h3>
