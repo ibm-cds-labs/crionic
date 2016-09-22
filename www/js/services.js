@@ -88,7 +88,7 @@ angular.module('starter.services', ['ionic'])
   }
 
   function check(geo) {
-    console.log('||||||||||||||||||||| check')
+    console.log('Check for location enabled')
     geo.isLocationEnabled(onOk, onErr)
     return geo
 
