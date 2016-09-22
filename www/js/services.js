@@ -137,7 +137,7 @@ angular.module('starter.services', ['ionic'])
 
   function onFail(er) {
     geo.finish()
-    console.log('backgroundGeolocation error:', er)
+    console.log('backgroundGeolocation error:', er.message)
   }
 
   // Return locations with their crime counts.
@@ -169,6 +169,9 @@ angular.module('starter.services', ['ionic'])
         }
       }
 
+      var distances = {'1/8 Mile':1/8, '1/4 Mile':1/4, '1/2 Mile':1/2, '1 Mile':1}
+      var maxDistance = distances[config.radius]
+
       var result = []
       go()
       function go() {
@@ -180,18 +183,16 @@ angular.module('starter.services', ['ionic'])
         var lon1 = loc.longitude
 
         if (config.debug == 'Boston no crime') {
+          lat1 = 42.375186
+          lon1 = -71.111702
+        } else if (config.debug == 'Boston high crime') {
           lat1 = 42.336453
           lon1 = -71.049259
-        } else if (config.debug == 'Boston high crime') {
-          //lat2 = loc.latitude
-          //lat2 = loc.longitude
         }
 
         DB.nearby(lat1, lon1)
         .catch(function(er) { def.reject(er) })
         .then(function(docs) {
-          var distances = {'1/8 Mile':1/8, '1/4 Mile':1/4, '1/2 Mile':1/2, '1 Mile':1}
-          var maxDistance = distances[config.radius]
           console.log('Trim out %s crime docs with distance greater than %s miles', docs.length, maxDistance)
 
           var count = 0
@@ -202,13 +203,15 @@ angular.module('starter.services', ['ionic'])
 
             var distance = Util.distance(lat1, lon1, lat2, lon2)
             if (distance <= maxDistance) {
-              result.push(doc)
+              count += 1
             } else {
               //console.log('Trim crime doc at distance %s: %s', distance, doc._id)
             }
           }
 
-          //console.log('Nearby for location: ' + JSON.stringify(docs))
+          loc.crimeCount = count
+          result.push(loc)
+
           go()
         })
       }
