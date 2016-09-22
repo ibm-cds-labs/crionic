@@ -132,7 +132,17 @@ angular.module('starter.services', ['ionic'])
 
   function onLocation(loc) {
     console.log('Yay! Location =', JSON.stringify(loc))
-    geo.finish()
+
+    crimeCounts([loc]).then(function(locs) {
+      var loc = locs[0]
+      if (loc.crimeCount > 5) {
+        console.log('XXX')
+        console.log('XXX High crime here! ', loc.crimeCount)
+        console.log('XXX')
+      }
+
+      geo.finish()
+    })
   }
 
   function onFail(er) {
