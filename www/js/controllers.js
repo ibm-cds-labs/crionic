@@ -46,7 +46,8 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
     }
 
     console.log('Start (or continue) location monitoring')
-    Location.geo().then(function(geo) { geo.init() })
+    Location.init()
+      .then(function() { console.log('Back in the controller; init is done') })
   }
 
   console.log('Calling up rep from the controller')
