@@ -7,15 +7,26 @@
       </p>
     </div>
     <div class="list">
-      <ion-toggle class="item" ng-change="changeMonitoring()", ng-model="settings.enableMonitoring">
+      <ion-toggle class="item" ng-change="changeSettings()", ng-model="settings.enableMonitoring">
         Enable location monitoring
       </ion-toggle>
 
       <label class="item item-input item-select">
         <div class="input-label">
+          Search Radius
+        </div>
+        <select ng-model="settings.radius" ng-change="changeSettings()">
+          <option>1/8 Mile</option>
+          <option>1/4 Mile</option>
+          <option>1/2 Mile</option>
+          <option>1 Mile</option>
+        </select>
+      </label>
+      <label class="item item-input item-select">
+        <div class="input-label">
           Choose a City
         </div>
-        <select ng-model="settings.city" ng-change="changeCity()">
+        <select ng-model="settings.city" ng-change="changeSettings()">
           <option>Boston</option>
         </select>
       </label>

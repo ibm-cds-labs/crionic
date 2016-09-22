@@ -1,7 +1,7 @@
 angular.module('starter.controllers', ['ionic', 'ngCordova'])
 
 .controller('DashCtrl', function($scope, $timeout, DB) {
-  $scope.settings = { enableMonitoring: false, city:'Boston' }
+  $scope.settings = { enableMonitoring: false, city:'Boston', radius:'1/4 Mile' }
   $scope.syncStatus = 'off'
   $scope.syncPercent = 0
 
@@ -10,20 +10,23 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
   .then(function(doc) {
     //console.log('Got my config', doc)
     $scope.settings.enableMonitoring = doc.enableMonitoring || $scope.settings.enableMonitoring
+    $scope.settings.radius           = doc.radius           || $scope.settings.radius
     $scope.settings.city             = doc.city             || $scope.settings.city
   }).catch(function(e) { throw e })
 
-  $scope.changeCity = function() {
-    console.log('TODO: City changed', $scope.settings)
-  }
+  $scope.changeSettings = function() {
+    console.log('Settings', $scope.settings)
+    return DB.crimes.txn({id:DB.CONFIG_ID, create:true}, update_settings).then(done)
 
-  $scope.changeMonitoring = function() {
-    console.log('Monitoring setting changed', $scope.settings.enableMonitoring)
-    DB.crimes.txn({id:DB.CONFIG_ID, create:true},
-      function(doc) { doc.enableMonitoring = !! $scope.settings.enableMonitoring })
-    .then(function(doc) {
-      console.log('Monitoring settings updated:', doc.enableMonitoring)
-    })
+    function update_settings(doc) {
+      doc.enableMonitoring = !! $scope.settings.enableMonitoring
+      doc.radius           = $scope.settings.radius
+      doc.city             = $scope.settings.city
+    }
+
+    function done(doc) {
+      console.log('Settings updated:', doc)
+    }
   }
 
   console.log('Calling up rep from the controller')
@@ -92,8 +95,7 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
     var lat = position.coords.latitude
     var lon = position.coords.longitude
 
-    var range = 200
-    return DB.nearby(lat, lon, range).then(logNearby)
+    return DB.nearby(lat, lon).then(logNearby)
   }
 
   function logNearby(crimes) {
