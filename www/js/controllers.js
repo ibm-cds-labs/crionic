@@ -12,7 +12,7 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
     $scope.settings.enableMonitoring = doc.enableMonitoring || $scope.settings.enableMonitoring
     $scope.settings.radius           = doc.radius           || $scope.settings.radius
     $scope.settings.city             = doc.city             || $scope.settings.city
-  }).catch(function(e) { throw e })
+  })
 
   $scope.changeSettings = function() {
     console.log('Settings', $scope.settings)
@@ -75,6 +75,9 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
 })
 
 .controller('ChatsCtrl', function($scope, $cordovaGeolocation, DB) {
+  $scope.enabled = false
+  $scope.logs = []
+
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
   // To listen for when this page is active (for example, to refresh data),
@@ -82,12 +85,21 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
   //
   $scope.$on('$ionicView.enter', function(e) {
     console.log('Enter view', e)
-    //return DB.ddoc().then(checkMyLocation)
+    DB.crimes.txn({id:DB.CONFIG_ID, create:true}, DB.noop).then(updateSettings)
+
+    return checkMyLocation()
   });
 
-  checkMyLocation()
+  function updateSettings(config) {
+    // Hmm, I think in principle the doc could be missing, or these values could be missing. But I don't think it will matter.
+    $scope.enabled = config.enableMonitoring
+    $scope.city    = config.city
+    $scope.radius  = config.radius
+  }
+
 
   function checkMyLocation() {
+    console.log('Check locatiton for activity page')
     $cordovaGeolocation.getCurrentPosition().then(checkNearMe)
   }
 
