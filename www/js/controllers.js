@@ -1,21 +1,27 @@
 angular.module('starter.controllers', ['ionic', 'ngCordova'])
 
-.controller('DashCtrl', function($scope, $timeout, DB) {
+.controller('DashCtrl', function($scope, $timeout, DB, Location) {
   $scope.settings = { enableMonitoring: false, city:'Boston', radius:'1/4 Mile', debug:'Normal Location' }
   $scope.syncStatus = 'off'
   $scope.syncPercent = 0
 
+  $scope.changeSettings = changeSettings
+
+
   // Keep the UI and config in the DB in sync.
-  DB.crimes.txn({id:DB.CONFIG_ID, create:true}, DB.noop)
-  .then(function(doc) {
+  DB.crimes.txn({id:DB.CONFIG_ID, create:true}, DB.noop).then(updateConfig)
+
+  function updateConfig(doc) {
     //console.log('Got my config', doc)
     $scope.settings.enableMonitoring = doc.enableMonitoring || $scope.settings.enableMonitoring
     $scope.settings.radius           = doc.radius           || $scope.settings.radius
     $scope.settings.debug            = doc.debug            || $scope.settings.debug
     $scope.settings.city             = doc.city             || $scope.settings.city
-  })
 
-  $scope.changeSettings = function() {
+    monitorGeo()
+  }
+
+  function changeSettings() {
     console.log('Settings', $scope.settings)
     return DB.crimes.txn({id:DB.CONFIG_ID, create:true}, update_settings).then(done)
 
@@ -28,10 +34,23 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
 
     function done(doc) {
       console.log('Settings updated:', doc)
+      monitorGeo()
     }
+  }
+  
+  function monitorGeo() {
+    console.log('Monitoring geo')
+    if (! $scope.settings.enableMonitoring) {
+      console.log('Stop location monitoring')
+      return Location.geo().then(function(geo) { geo.stop() })
+    }
+
+    console.log('Start (or continue) location monitoring')
+    Location.geo().then(function(geo) { geo.init() })
   }
 
   console.log('Calling up rep from the controller')
+  if(0) // XXX
   DB.pullCrimes().then(function(result) {
     $scope.syncStatus = 'sync'
 
@@ -76,7 +95,8 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
   })
 })
 
-.controller('ChatsCtrl', function($scope, $cordovaGeolocation, DB) {
+//.controller('ChatsCtrl', function($scope, $cordovaGeolocation, DB) {
+.controller('ChatsCtrl', function($scope, DB, Location) {
   $scope.enabled = false
   $scope.logs = []
 
@@ -102,7 +122,7 @@ angular.module('starter.controllers', ['ionic', 'ngCordova'])
 
   function checkMyLocation() {
     console.log('Check locatiton for activity page')
-    $cordovaGeolocation.getCurrentPosition().then(checkNearMe)
+    //$cordovaGeolocation.getCurrentPosition().then(checkNearMe)
   }
 
   function checkNearMe(position) {
