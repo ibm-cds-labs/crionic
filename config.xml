@@ -60,5 +60,5 @@
     <plugin name="cordova-plugin-mauron85-background-geolocation" spec="~2.2.1">
         <variable name="ALWAYS_USAGE_DESCRIPTION" value="This app requires background location tracking" />
     </plugin>
-    <plugin name="de.appplant.cordova.plugin.local-notification-ios9-fix" spec="https://github.com/willyboy/cordova-plugin-local-notifications" />
+    <plugin name="de.appplant.cordova.plugin.local-notification" spec="https://github.com/katzer/cordova-plugin-local-notifications.git" />
 </widget>
