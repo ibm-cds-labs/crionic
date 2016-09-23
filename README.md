@@ -16,6 +16,8 @@ To use Crionic:
 2. Wait for the data to sync the first time.
 3. Close the app
 
+Note, there is a developer option, to override your location to be in low-crime or high-crime areas, in order to see how the app feels without actually going out looking for trouble!
+
 Crionic will now watch where you go, and send an alert to your device if you wander into a location with a high amount of recent crime.
 
 ## Development
