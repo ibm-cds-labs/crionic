@@ -393,7 +393,8 @@ angular.module('starter.services', ['ionic'])
     function findLatest(last_seq) {
       // Figure out the timestamp of "one week ago."
       var oneWeekAgo = new Date
-      oneWeekAgo.setUTCDate(oneWeekAgo.getUTCDate() - 7)
+      //oneWeekAgo.setUTCDate(oneWeekAgo.getUTCDate() - 7)
+      oneWeekAgo.setUTCDate(oneWeekAgo.getUTCDate() - 11)
       oneWeekAgo = oneWeekAgo.valueOf()
 
       var viewName = 'view/cityTime'
