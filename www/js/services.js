@@ -234,8 +234,8 @@ angular.module('starter.services', ['ionic'])
           lat1 = 42.375186
           lon1 = -71.111702
         } else if (config.debug == 'Boston high crime') {
-          lat1 = 42.336453
-          lon1 = -71.049259
+          lat1 = 42.3368915
+          lon1 = -71.077551
         }
 
         DB.nearby(lat1, lon1)
@@ -257,6 +257,7 @@ angular.module('starter.services', ['ionic'])
             }
           }
 
+          console.log('Crime count for location ' + JSON.stringify(loc) + ': ' + count)
           loc.crimeCount = count
           result.push(loc)
 
