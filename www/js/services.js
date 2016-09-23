@@ -146,18 +146,20 @@ angular.module('starter.services', ['ionic'])
       if (loc.crimeCount > 5) {
         console.log('XXX')
         console.log('XXX High crime here! ', loc.crimeCount)
-        console.log('$cordovaLocalNotification: ', $cordovaLocalNotification.schedule)
         console.log('XXX')
 
         $cordovaLocalNotification.schedule({
           id: 1,
-          title: 'Title here',
-          text: 'Text here',
-          data: { customProperty: 'custom value' }
+          title: 'High Crime Area',
+          text: 'This area has had some crimes here recently',
+          badge: 1
         }).then(function (result) {
           console.log('Result from schedule', JSON.stringify(result))
           geo.finish()
         });
+        
+        console.log('Local notification error', eer && eer.message)
+        console.log('What about -----------', cordova.plugins.notification.local)
 
 //        var action = 
 //           { identifier: 'MORE_SIGNIN_OPTIONS',

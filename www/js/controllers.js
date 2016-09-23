@@ -1,12 +1,20 @@
 angular.module('starter.controllers', ['ionic', 'ngCordova'])
 
-.controller('DashCtrl', function($scope, $timeout, DB, Location) {
+.controller('DashCtrl', function($scope, $timeout, $ionicPlatform, $cordovaLocalNotification, DB, Location) {
   $scope.settings = { enableMonitoring: false, city:'Boston', radius:'1/4 Mile', debug:'Normal Location' }
   $scope.syncStatus = 'off'
   $scope.syncPercent = 0
 
   $scope.changeSettings = changeSettings
 
+  $ionicPlatform.ready(function() {
+    console.log('- - - - - - - - Schedule a notification now - - - - - - - -')
+    var r = $cordovaLocalNotification.hasPermission()
+    .then(function(res) { console.log('== = = = perm result ', JSON.stringify(res)) })
+
+    $cordovaLocalNotification.schedule({id:2, title: 'Hello notification world'})
+    console.log('-------------- result ' , JSON.stringify(r))
+  })
 
   // Keep the UI and config in the DB in sync.
   DB.crimes.txn({id:DB.CONFIG_ID, create:true}, DB.noop).then(updateConfig)
