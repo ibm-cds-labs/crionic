@@ -1,4 +1,4 @@
-angular.module('starter.services', ['ionic'])
+angular.module('starter.services', ['ionic', 'ngCordova'])
 
 .factory('Location', function($q, $cordovaLocalNotification, DB, Util) {
   var geo = null
@@ -148,19 +148,20 @@ angular.module('starter.services', ['ionic'])
         console.log('XXX High crime here! ', loc.crimeCount)
         console.log('XXX')
 
+        var when = new Date
+        when.setUTCSeconds(when.getUTCSeconds() + 5)
         $cordovaLocalNotification.schedule({
-          id: 1,
+          id: 100,
           title: 'High Crime Area',
           text: 'This area has had some crimes here recently',
           badge: 1
         }).then(function (result) {
           console.log('Result from schedule', JSON.stringify(result))
+          setTimeout(function() {
           geo.finish()
+          }, 250)
         });
         
-        console.log('Local notification error', eer && eer.message)
-        console.log('What about -----------', cordova.plugins.notification.local)
-
 //        var action = 
 //           { identifier: 'MORE_SIGNIN_OPTIONS',
 //             title: 'More Options',
