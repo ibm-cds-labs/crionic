@@ -26,7 +26,8 @@ You can run this app in Xcode, or a web browsesr, or your own device. Just clone
 
 1. `npm install`
 2. `npm run bower`
-3. `npm run xcode` or `npm run serve`
+3. `cordova platform add ios`
+4. `npm run xcode` or `npm run serve`
 
 This will run the Ionic app in your Xcode, or in your browser!
 
